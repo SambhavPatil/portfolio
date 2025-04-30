@@ -1,5 +1,8 @@
 // Wait for the DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize EmailJS
+    emailjs.init("2dVK0vZm54ET4ct7h");
+    
     // Mobile menu toggle
     const menuToggle = document.querySelector('.menu-toggle');
     const nav = document.querySelector('nav');
@@ -41,34 +44,72 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Contact form submission
+    // Contact form submission with EmailJS
     const contactForm = document.getElementById('contactForm');
+    const successMessage = document.getElementById('success-message');
+    const errorMessage = document.getElementById('error-message');
     
     if (contactForm) {
         contactForm.addEventListener('submit', function(e) {
             e.preventDefault();
             
+            // Show loading state
+            const submitButton = contactForm.querySelector('button[type="submit"]');
+            const originalButtonText = submitButton.textContent;
+            submitButton.textContent = 'Sending...';
+            submitButton.disabled = true;
+            
             // Get form values
-            const formElements = contactForm.elements;
-            const name = formElements[0].value;
-            const email = formElements[1].value;
-            const subject = formElements[2].value;
-            const message = formElements[3].value;
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const subject = document.getElementById('subject').value;
+            const message = document.getElementById('message').value;
             
-            // Here you would typically send the form data to a server
-            // For now, we'll just log it and show a success message
-            console.log({
-                name,
-                email,
-                subject,
-                message
-            });
+            // Prepare template parameters
+            const templateParams = {
+                from_name: name,
+                from_email: email,
+                subject: subject,
+                message: message
+            };
             
-            // Clear form
-            contactForm.reset();
-            
-            // Show success message
-            alert('Thank you for your message! I will get back to you soon.');
+            // Send email using EmailJS
+            emailjs.send('service_2mp28v4', 'template_b0epbyq', templateParams)
+                .then(function(response) {
+                    console.log('SUCCESS!', response.status, response.text);
+                    
+                    // Reset form
+                    contactForm.reset();
+                    
+                    // Show success message
+                    successMessage.style.display = 'block';
+                    errorMessage.style.display = 'none';
+                    
+                    // Hide success message after 5 seconds
+                    setTimeout(function() {
+                        successMessage.style.display = 'none';
+                    }, 5000);
+                    
+                    // Reset button
+                    submitButton.textContent = originalButtonText;
+                    submitButton.disabled = false;
+                })
+                .catch(function(error) {
+                    console.log('FAILED...', error);
+                    
+                    // Show error message
+                    errorMessage.style.display = 'block';
+                    successMessage.style.display = 'none';
+                    
+                    // Hide error message after 5 seconds
+                    setTimeout(function() {
+                        errorMessage.style.display = 'none';
+                    }, 5000);
+                    
+                    // Reset button
+                    submitButton.textContent = originalButtonText;
+                    submitButton.disabled = false;
+                });
         });
     }
     
